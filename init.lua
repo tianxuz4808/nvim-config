@@ -184,6 +184,10 @@ do
   -- Clear highlights on search when pressing <Esc> in normal mode
   --  See `:help hlsearch`
   vim.keymap.set('n', '<Esc>', '<cmd>nohlsearch<CR>')
+  -- creates a vertial split window like vscode
+  vim.keymap.set('n', '<C-\\>', '<cmd>vsplit<CR>')
+  -- closes a vertical split window
+  vim.keymap.set('n', '<C-w>', '<cmd>close<CR>')
 
   -- Diagnostic Config & Keymaps
   --  See `:help vim.diagnostic.Opts`
@@ -217,7 +221,7 @@ do
   --
   -- NOTE: This won't work in all terminal emulators/tmux/etc. Try your own mapping
   -- or just use <C-\><C-n> to exit terminal mode
-  vim.keymap.set('t', '<Esc><Esc>', '<C-\\><C-n>', { desc = 'Exit terminal mode' })
+  vim.keymap.set('t', '<Esc><Esc>', '<C-\\>close<C-n>', { desc = 'Exit terminal mode' })
 
   -- TIP: Disable arrow keys in normal mode
   -- vim.keymap.set('n', '<left>', '<cmd>echo "Use h to move!!"<CR>')
@@ -734,9 +738,9 @@ do
   ---@type table<string, vim.lsp.Config>
   local servers = {
     -- clangd = {},
-    -- gopls = {},
+    gopls = {},
     -- pyright = {},
-    -- tsc = {},
+    tsc = {},
     --
     -- Some languages (like rust) have entire language plugins that can be useful:
     --    https://github.com/mrcjkb/rustaceanvim
@@ -911,7 +915,7 @@ do
     completion = {
       -- By default, you may press `<c-space>` to show the documentation.
       -- Optionally, set `auto_show = true` to show the documentation after a delay.
-      documentation = { auto_show = false, auto_show_delay_ms = 500 },
+      documentation = { auto_show = true, auto_show_delay_ms = 500 },
     },
 
     sources = {
@@ -933,6 +937,46 @@ do
     signature = { enabled = true },
   }
 end
+
+-- Time in milliseconds before CursorHold fires.
+vim.opt.updatetime = 500
+
+local hover_dismissed = false
+
+-- Automatically show hover documentation when the cursor rests.
+vim.api.nvim_create_autocmd("CursorHold", {
+  callback = function()
+    if hover_dismissed then
+      return
+    end
+
+    vim.lsp.buf.hover({
+      border = "rounded",
+    })
+  end,
+})
+
+-- Moving the cursor allows hover documentation to appear again.
+vim.api.nvim_create_autocmd({ "CursorMoved", "InsertEnter" }, {
+  callback = function()
+    hover_dismissed = false
+  end,
+})
+
+-- Escape dismisses the hover popup and prevents immediate reopening.
+vim.keymap.set("n", "<Esc>", function()
+  hover_dismissed = true
+  for _, win in ipairs(vim.api.nvim_list_wins()) do
+    if vim.api.nvim_win_is_valid(win) then
+      local buf = vim.api.nvim_win_get_buf(win)
+      if vim.bo[buf].filetype == "markdown"
+        and vim.bo[buf].buftype == "nofile"
+      then
+        vim.api.nvim_win_close(win, true)
+      end
+    end
+  end
+end, { desc = "Dismiss hover documentation" })
 
 -- ============================================================
 -- SECTION 9: TREESITTER
@@ -1000,6 +1044,23 @@ do
   })
 end
 
+-- enables a vscode like file explorer on the left hand side of the screen
+vim.pack.add({
+  {
+    src = 'https://github.com/nvim-neo-tree/neo-tree.nvim',
+    version = vim.version.range('3')
+  },
+  -- dependencies
+  "https://github.com/nvim-lua/plenary.nvim",
+  "https://github.com/MunifTanjim/nui.nvim",
+  -- optional, but recommended
+  "https://github.com/nvim-tree/nvim-web-devicons",
+})
+
+
+vim.keymap.set('n', '<C-b>', '<cmd>Neotree filesystem toggle left<CR>', {
+  desc = 'Toggle Neo-tree',
+})
 -- ============================================================
 -- SECTION 10: OPTIONAL EXAMPLES / NEXT STEPS
 -- kickstart.plugins.* examples
