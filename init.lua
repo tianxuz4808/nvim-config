@@ -498,6 +498,27 @@ end
 -- SECTION 5: SEARCH & NAVIGATION
 -- Telescope setup, keymaps, LSP picker mappings
 -- ============================================================
+--
+-- error viewer
+vim.pack.add({
+  "https://github.com/folke/trouble.nvim",
+})
+
+
+-- Configure Trouble
+require("trouble").setup({})
+
+-- Trouble keymaps
+vim.keymap.set("n", "<leader>xx", "<cmd>Trouble diagnostics toggle<CR>", {
+  desc = "Toggle diagnostics",
+})
+
+vim.keymap.set("n", "<leader>xd", "<cmd>Trouble diagnostics toggle filter.buf=0<CR>", {
+  desc = "Buffer diagnostics",
+})
+
+-- Telescope integration
+local trouble_telescope = require("trouble.sources.telescope")
 do
   -- [[ Fuzzy Finder (files, lsp, etc) ]]
   --
@@ -545,6 +566,15 @@ do
     --   },
     -- },
     -- pickers = {}
+  {
+      i = {
+        ["<C-t>"] = trouble_telescope.open,
+      },
+      n = {
+        ["<C-t>"] = trouble_telescope.open,
+      },
+    },
+
     extensions = {
       ['ui-select'] = { require('telescope.themes').get_dropdown() },
     },
@@ -964,7 +994,7 @@ vim.api.nvim_create_autocmd({ "CursorMoved", "InsertEnter" }, {
 })
 
 -- Escape dismisses the hover popup and prevents immediate reopening.
-vim.keymap.set("n", "<Esc>", function()
+vim.keymap.set("n", "q", function()
   hover_dismissed = true
   for _, win in ipairs(vim.api.nvim_list_wins()) do
     if vim.api.nvim_win_is_valid(win) then
@@ -1061,6 +1091,50 @@ vim.pack.add({
 vim.keymap.set('n', '<C-b>', '<cmd>Neotree filesystem toggle left<CR>', {
   desc = 'Toggle Neo-tree',
 })
+
+vim.pack.add({
+  'https://github.com/windwp/nvim-autopairs',
+})
+
+require('nvim-autopairs').setup({
+  check_ts = true,
+})
+
+
+-- git diff viewer
+vim.pack.add({
+  'https://github.com/sindrets/diffview.nvim',
+})
+
+-- go formatter on save
+vim.pack.add({
+  "https://github.com/ray-x/go.nvim",
+})
+
+require("go").setup({
+  goimports = "gopls",
+  gofmt = "gopls",
+
+  -- Keep your existing gopls configuration.
+  lsp_cfg = false,
+})
+
+local go_format_group = vim.api.nvim_create_augroup(
+  "GoFormatOnSave",
+  { clear = true }
+)
+
+vim.api.nvim_create_autocmd("BufWritePre", {
+  group = go_format_group,
+  pattern = "*.go",
+  callback = function()
+    require("go.format").goimports()
+  end,
+})
+
+
+
+
 -- ============================================================
 -- SECTION 10: OPTIONAL EXAMPLES / NEXT STEPS
 -- kickstart.plugins.* examples
