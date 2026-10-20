@@ -108,6 +108,7 @@ do
 
   -- Make line numbers default
   vim.o.number = true
+  vim.o.relativenumber = true
   -- You can also add relative line numbers, to help with jumping.
   --  Experiment for yourself to see if you like it!
   -- vim.o.relativenumber = true
@@ -188,6 +189,11 @@ do
   vim.keymap.set('n', '<C-\\>', '<cmd>vsplit<CR>')
   -- closes a vertical split window
   vim.keymap.set('n', '<C-w>', '<cmd>close<CR>')
+
+vim.keymap.set("n", "=", [[<cmd>vertical resize +5<cr>]]) -- make the window biger vertically
+vim.keymap.set("n", "-", [[<cmd>vertical resize -5<cr>]]) -- make the window smaller vertically
+vim.keymap.set("n", "+", [[<cmd>horizontal resize +2<cr>]]) -- make the window bigger horizontally by pressing shift and =
+vim.keymap.set("n", "_", [[<cmd>horizontal resize -2<cr>]]) -- make the window smaller horizontally by pressing shift and -
 
   -- Diagnostic Config & Keymaps
   --  See `:help vim.diagnostic.Opts`
@@ -1132,8 +1138,26 @@ vim.api.nvim_create_autocmd("BufWritePre", {
   end,
 })
 
+vim.pack.add({
+  "https://github.com/numToStr/Comment.nvim",
+})
 
+require("Comment").setup()
 
+vim.keymap.set("n", "<C-/>", function()
+  require("Comment.api").toggle.linewise.current()
+end, {
+  desc = "Toggle comment",
+})
+
+vim.keymap.set("v", "<C-/>", function()
+  require("Comment.api").toggle.linewise(vim.fn.visualmode())
+end, {
+  desc = "Toggle comment",
+})
+
+vim.keymap.set({ 'n', 'i', 'v' }, '<S-Up>', '<Nop>')
+vim.keymap.set({ 'n', 'i', 'v' }, '<S-Down>', '<Nop>')
 
 -- ============================================================
 -- SECTION 10: OPTIONAL EXAMPLES / NEXT STEPS
